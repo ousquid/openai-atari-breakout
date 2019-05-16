@@ -23,6 +23,11 @@ class Environment:
         self.env = SubprocVecEnv(envs)
         
         self.actor_critic = Net(self.env.action_space.n)
+            
+        optm = keras.optimizers.RMSprop(lr=LR, rho=ALPHA, epsilon=EPS)
+        self.actor_critic.compile(
+            optimizer=optm, loss="mean_squared_error", metrics=["mean_absolute_error"])
+        
         self.global_brain = Brain(self.actor_critic)
         
         # (4, 84, 84)
@@ -75,33 +80,30 @@ class Environment:
                 storage.insert(current_obs, cpu_action, reward, done)
 
             # advancedした最終stepの状態から予想する状態価値を計算
-            with torch.no_grad():
-                next_value = actor_critic.get_value(
-                    rollouts.observations[-1]).detach()
+            #with torch.no_grad():
+            next_value = self.actor_critic.predict(storage.observations[-1])[0]
 
-            # 全stepの割引報酬和を計算して、rolloutsの変数returnsを更新
-            rollouts.compute_returns(next_value)
+            # 全stepの割引報酬和returnsを計算
+            storage.compute_returns(next_value)
 
-            # ネットワークとrolloutの更新
-            global_brain.update(rollouts)
-            rollouts.after_update()
+            # ネットワークとstorageの更新
+            self.global_brain.update(storage)
+            storage.after_update()
 
             # ログ：途中経過の出力
             if j % 100 == 0:
                 print("finished frames {}, mean/median reward {:.1f}/{:.1f}, min/max reward {:.1f}/{:.1f}".
                       format(j*NUM_PROCESSES*NUM_ADVANCED_STEP,
-                             final_rewards.mean(),
-                             final_rewards.median(),
-                             final_rewards.min(),
-                             final_rewards.max()))
+                             final_rewards.mean(),final_rewards.median(),
+                             final_rewards.min(),final_rewards.max()))
 
             # 結合パラメータの保存
             if j % 12500 == 0:
-                torch.save(global_brain.actor_critic.state_dict(),
-                           'weight_'+str(j)+'.pth')
+                self.actor_critic.save('weight_'+str(j)+'.pth')
         
         # 実行ループの終了
-        torch.save(global_brain.actor_critic.state_dict(), 'weight_end.pth')
+        self.actor_critic.save('weight_end.pth')
+
 
 if __name__=="__main__":
     breakout_env = Environment()

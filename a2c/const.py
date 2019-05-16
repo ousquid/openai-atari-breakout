@@ -22,11 +22,11 @@ NUM_UPDATES = int(TOTAL_FRAMES / NUM_ADVANCED_STEP / NUM_PROCESSES)  # ネット
 
 
 # A2Cの損失関数の計算のための定数設定
-value_loss_coef = 0.5
-entropy_coef = 0.01
-max_grad_norm = 0.5
+VALUE_LOSS_COEF = 0.5
+ENTROPY_COEF = 0.01
+MAX_GRAD_NORM = 0.5
 
 # 学習手法RMSpropの設定
-lr = 7e-4
-eps = 1e-5
-alpha = 0.99
+LR = 7e-4
+EPS = 1e-5
+ALPHA = 0.99

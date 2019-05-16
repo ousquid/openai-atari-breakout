@@ -1,10 +1,4 @@
 
-# In[8]:
-
-
-# A2Cのディープ・ニューラルネットワークの構築
-
-
 def init(module, gain):
     '''層の結合パラメータを初期化する関数を定義'''
     nn.init.orthogonal_(module.weight.data, gain=gain)
@@ -45,19 +39,22 @@ class Net(nn.Module):
         )
 
         # 結合パラメータの初期化関数
-        def init_(module): return init(module, gain=1.0)
+        def init_(module): 
+            return init(module, gain=1.0)
 
         # Criticの定義
         self.critic = init_(nn.Linear(512, 1))  # 状態価値なので出力は1つ
 
         # 結合パラメータの初期化関数
-        def init_(module): return init(module, gain=0.01)
+        def init_(module): 
+            return init(module, gain=0.01)
 
         # Actorの定義
         self.actor = init_(nn.Linear(512, n_out))  # 行動を決めるので出力は行動の種類数
 
         # ネットワークを訓練モードに設定
         self.train()
+
 
     def forward(self, x):
         '''ネットワークのフォワード計算を定義します'''
@@ -67,6 +64,7 @@ class Net(nn.Module):
         actor_output = self.actor(conv_output)  # 行動の計算
 
         return critic_output, actor_output
+
 
     def act(self, x):
         '''状態xから行動を確率的に求めます'''
@@ -80,6 +78,7 @@ class Net(nn.Module):
 
         return action
 
+
     def get_value(self, x):
         '''状態xから状態価値を求めます'''
         value, actor_output = self(x)
@@ -88,19 +87,4 @@ class Net(nn.Module):
         # https://github.com/YutaroOgawa/Deep-Reinforcement-Learning-Book
         
         return value
-
-    def evaluate_actions(self, x, actions):
-        '''状態xから状態価値、実際の行動actionsのlog確率とエントロピーを求めます'''
-        value, actor_output = self(x)
-        # 190324
-        # self(x)の動作について、以下のリンクの最下部のFAQに解説を補足しました。
-        # https://github.com/YutaroOgawa/Deep-Reinforcement-Learning-Book
-        
-        log_probs = F.log_softmax(actor_output, dim=1)  # dim=1で行動の種類方向に計算
-        action_log_probs = log_probs.gather(1, actions)  # 実際の行動のlog_probsを求める
-
-        probs = F.softmax(actor_output, dim=1)  # dim=1で行動の種類方向に計算
-        dist_entropy = -(log_probs * probs).sum(-1).mean()
-
-        return value, action_log_probs, dist_entropy
 
