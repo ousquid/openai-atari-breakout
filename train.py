@@ -5,10 +5,7 @@ import numpy as np
 from collections import deque
 from tqdm import tqdm
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
+import numpy as np
 
 import gym
 from gym import spaces
@@ -58,7 +55,7 @@ class Environment:
             for step in range(NUM_ADVANCED_STEP):
                 #with torch.no_grad():
                 _, cpu_actions = self.actor_critic(storage.observations[step])
-                action = cpu_actions.multinomial(num_samples=1)
+                action = np.random.multinomial(cpu_actions, size=1)
 
                 # obs size:(16, 1, 84, 84)
                 obs, reward, done, info = self.env.step(cpu_actions)

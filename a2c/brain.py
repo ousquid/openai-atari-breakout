@@ -21,14 +21,13 @@ class Brain:
         
         '''
         value, actor_output = self.actor_critic.output
-        log_probs = K.log(K.softmax(actor_output))  
+        log_probs = K.log(actor_output)  
         
         # a[i][j] = log_probs[i][actions[i][j]]
         action_log_probs = K.gather(K.transpose(log_probs), actions)
         
         # dim=1で行動の種類方向に計算
-        probs = K.softmax(actor_output)  
-        dist_entropy = -K.mean(K.sum(log_probs * probs, axis=1)) 
+        dist_entropy = -K.mean(K.sum(log_probs * actor_output, axis=1)) 
         # 軸やばい # meanやばい-> size 1?
     
         return value, action_log_probs, dist_entropy
