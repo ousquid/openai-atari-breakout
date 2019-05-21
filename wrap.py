@@ -1,4 +1,9 @@
-from baselines.common.vec_env.subproc_vec_env import SubprocVecEnv
+import gym
+from gym import spaces
+from gym.spaces.box import Box
+
+import cv2
+import numpy as np
 
 class NoopResetEnv(gym.Wrapper):
     def __init__(self, env, noop_max=30):

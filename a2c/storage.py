@@ -1,3 +1,4 @@
+import numpy as np
 from .const import GAMMA
 
 class RolloutStorage:
@@ -17,9 +18,9 @@ class RolloutStorage:
     def insert(self, current_obs, action, reward, mask):
         '''次のindexにtransitionを格納する'''
         self.observations[self.index + 1] = current_obs
-        self.masks[self.index + 1] = mask
+        self.masks[self.index + 1] = mask.reshape(-1,1)
         self.rewards[self.index] = reward
-        self.actions[self.index] = action
+        self.actions[self.index] = action.reshape(-1,1)
 
         self.index = (self.index + 1) % self.num_steps
 
@@ -35,5 +36,5 @@ class RolloutStorage:
         # 注意：5step目はAdvantage1となる。4ステップ目はAdvantage2となる。・・・
         self.discounted_rewards[-1] = next_value
         for ad_step in reversed(range(self.num_steps)):
-            self.discounted_rewards[ad_step] = 
+            self.discounted_rewards[ad_step] = \
                 self.discounted_rewards[ad_step + 1] * GAMMA * self.masks[ad_step + 1] + self.rewards[ad_step]

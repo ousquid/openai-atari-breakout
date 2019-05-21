@@ -63,20 +63,25 @@ class Brain:
                           action_gain - dist_entropy * ENTROPY_COEF)
                           
             return RMSprop(lr=LR, epsilon=0.1, rho=0.99, clipnorm=MAX_GRAD_NORM).get_updates(
-                (self.actor_critic.trainable_weights, [], total_loss) )
+                self.actor_critic.trainable_weights, [], total_loss)
 
-        obs_shape = storage.observations.size()[2:]  
+        obs_shape = storage.observations.shape[2:]  
         num_steps = NUM_ADVANCED_STEP
         num_processes = NUM_PROCESSES
     
-        self.action_pl = K.placeholder(shape=(None, self.actor_critic.output_shape[1]))
-        self.discounted_r = K.placeholder(shape=(None,))
+        self.action_pl = K.placeholder(shape=(None, self.actor_critic.output_shape[1]), dtype="int32")
+        self.discounted_r = K.placeholder(shape=(None, 1))
 
         K_func = K.function(
             [self.actor_critic.input, self.action_pl, self.discounted_r],
             [], 
             updates=get_updates(self.action_pl, self.discounted_r))
 
+        print(storage.observations[:-1].reshape(-1, *obs_shape).shape)
+        print(storage.actions.reshape(-1, 1).shape)
+        print(storage.discounted_rewards[:-1].reshape(-1, 1).shape)
+        
         K_func([storage.observations[:-1].reshape(-1, *obs_shape),
                 storage.actions.reshape(-1, 1),
-                storage.discounted_rewards[:-1]])
+                storage.discounted_rewards[:-1].reshape(-1, 1)
+                ])
