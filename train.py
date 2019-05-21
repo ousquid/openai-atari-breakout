@@ -22,11 +22,11 @@ class Environment:
         envs = [make_env(ENV_NAME, i) for i in range(NUM_PROCESSES)]
         self.env = SubprocVecEnv(envs)
         
-        self.actor_critic = Net(self.env.action_space.n)
-            
-        optm = keras.optimizers.RMSprop(lr=LR, rho=ALPHA, epsilon=EPS)
+        self.actor_critic = Net(NUM_PROCESSES, obs_shape, self.env.action_space.n)
+        
+        #optm = keras.optimizers.RMSprop(lr=LR, rho=ALPHA, epsilon=EPS)
         self.actor_critic.compile(
-            optimizer=optm, loss="mean_squared_error", metrics=["mean_absolute_error"])
+            optimizer=None, loss="mean_squared_error", metrics=["mean_absolute_error"])
         
         self.global_brain = Brain(self.actor_critic)
         
@@ -57,8 +57,9 @@ class Environment:
         for j in tqdm(range(NUM_UPDATES)):
             for step in range(NUM_ADVANCED_STEP):
                 #with torch.no_grad():
-                cpu_actions = self.actor_critic.act(storage.observations[step])[0]
-                
+                _, cpu_actions = self.actor_critic(storage.observations[step])
+                action = cpu_actions.multinomial(num_samples=1)
+
                 # obs size:(16, 1, 84, 84)
                 obs, reward, done, info = self.env.step(cpu_actions)
 
@@ -81,7 +82,8 @@ class Environment:
 
             # advancedした最終stepの状態から予想する状態価値を計算
             #with torch.no_grad():
-            next_value = self.actor_critic.predict(storage.observations[-1])[0]
+            input_obs = storage.observations[-1] / 255
+            next_value, _ = self.actor_critic.predict(input_obs)
 
             # 全stepの割引報酬和returnsを計算
             storage.compute_returns(next_value)
