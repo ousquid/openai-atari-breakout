@@ -16,6 +16,9 @@ from a2c.const import NUM_PROCESSES, NUM_ADVANCED_STEP, NUM_UPDATES, \
 from a2c.net import create_a2c_net
 from a2c.brain import Brain
 from a2c.storage import RolloutStorage
+import theano
+theano.config.optimizer="fast_compile"
+#theano.config.exception_verbosity="high"
 
 class Environment:
     def __init__(self):
@@ -25,7 +28,9 @@ class Environment:
         # (4, 84, 84)
         obs_shape = self.env.observation_space.shape
         self.obs_shape = (obs_shape[0] * NUM_STACK_FRAME, *obs_shape[1:])
-
+        
+        print("obs_shape:", self.obs_shape)
+        print("action_num:", self.env.action_space.n)
         self.actor_critic = create_a2c_net(self.obs_shape, self.env.action_space.n)
         
         optm = keras.optimizers.RMSprop(lr=LR, rho=ALPHA, epsilon=EPS)
@@ -96,7 +101,7 @@ class Environment:
             if j % 100 == 0:
                 print("finished frames {}, mean/median reward {:.1f}/{:.1f}, min/max reward {:.1f}/{:.1f}".
                       format(j*NUM_PROCESSES*NUM_ADVANCED_STEP,
-                             final_rewards.mean(),final_rewards.median(),
+                             final_rewards.mean(), np.median(final_rewards),
                              final_rewards.min(),final_rewards.max()))
 
             # 結合パラメータの保存

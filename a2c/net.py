@@ -2,7 +2,7 @@ from keras.layers import Input, Dense, Conv2D, Flatten
 from keras.models import Model
 
 def create_a2c_net(obs_shape, n_out):
-    # This returns a tensor (None, 1, 84, 84)
+    # This returns a tensor (None, 4, 84, 84)
     inputs = Input(shape=obs_shape)
     
     x = Conv2D(32, 8, strides=4, activation='relu')(inputs)
@@ -15,4 +15,5 @@ def create_a2c_net(obs_shape, n_out):
     act = Dense(n_out, activation='softmax')(x)
 
     model = Model(inputs=inputs, outputs=[cri, act])
+    # output: [(1,),(n_out,)]
     return model
